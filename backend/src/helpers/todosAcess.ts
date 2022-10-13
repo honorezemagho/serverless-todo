@@ -6,7 +6,7 @@ import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate'
 import * as uuid from 'uuid'
 import { stringify } from 'querystring'
-import { getTodosForUser } from './todos'
+import { CreateTodoRequest } from '../../../client/src/types/CreateTodoRequest';
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -48,9 +48,16 @@ export class TodoAccess {
     return result.Items[0] as TodoItem
   }
 
-  async createNewTodo(todo: TodoItem) : Promise<TodoItem> {
+  async createNewTodo(todo: CreateTodoRequest, user_id: string) : Promise<TodoItem> {
     try {
-      const newItem = todo
+      const newItem = {
+        name: todo.name,
+        dueDate: todo.dueDate,
+        createdAt: new Date().toISOString(),
+        done: false,
+        userId: user_id,
+        todoId: await  uuid.v4()
+      }
 
       await dynamoDBDocClient
         .put({

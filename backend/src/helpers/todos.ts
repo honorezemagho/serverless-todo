@@ -4,7 +4,6 @@ import { TodoItem } from '../models/TodoItem'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
-import * as uuid from 'uuid'
 import * as createError from 'http-errors'
 
 // TODO: Implement businessLogic
@@ -22,16 +21,9 @@ export  const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
 export const createTodo =  async (todo: CreateTodoRequest, user_id: string): Promise<TodoItem>  => {
     logger.info('cresting new todo');
 
-    const id = await uuid.v4();
-
     return todoAccess.createNewTodo({
         name: todo.name,
-        dueDate: todo.dueDate,
-        createdAt: new Date().toISOString(),
-        done: false,
-        userId: user_id,
-        todoId: id
-    })
+        dueDate: todo.dueDate}, user_id)
 }
 
 export const updateTodo = async (todo_id: string, user_id: string, items_to_update: UpdateTodoRequest ) => {
