@@ -4,7 +4,7 @@ import { createLogger } from '../utils/logger';
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
-// TODO: Implement the fileStogare logic
+// TODO: Implement the fileStorage logic
 
 const logger = createLogger('S3Service')
 

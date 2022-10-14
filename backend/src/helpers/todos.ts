@@ -1,5 +1,5 @@
 import { TodoAccess } from './todosAcess';
-import { AttachmentUtils } from './attachmentUtils';
+import { AttachmentUtils, bucket } from './attachmentUtils';
 import { TodoItem } from '../models/TodoItem'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
@@ -54,4 +54,25 @@ export const deleteTodo = async (todo_id: string, user_id: string ) => {
     }
 
     return todoAccess.deleteTodo(todo_id, user_id);
+}
+
+export const createAttachmentPresignedUrl = async (todoId: string, userId: string) => {
+
+    logger.info(`Generating attachment URL for attachment ${todoId}`)
+    const attachmentUrl = await s3Utils.generateUploadUrl(todoId);
+
+
+    logger.info(`Updating todo ${todoId} with attachment URL ${attachmentUrl}`, { userId, todoId })
+    const todo = await todoAccess.getToDoItem(todoId)
+
+    if (!todo){
+        createError('Todo not found')
+    }
+  
+    if (todo.userId !== userId) {
+      logger.error(`User ${userId} does not have permission to update todo ${todoId}`)
+       createError('User is not authorized to update item')
+    }
+  
+    await todoAccess.updateTodoAttachmentUrl(todoId,userId, attachmentUrl)
 }
