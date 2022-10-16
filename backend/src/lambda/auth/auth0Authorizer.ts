@@ -4,10 +4,12 @@ import 'source-map-support/register'
 import { verify } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
 import { JwtPayload } from '../../auth/JwtPayload'
+import Axios from 'axios'
 
 const logger = createLogger('auth')
 
-const secret = "J7L8bAABYfGN6SJr9RZePoWi9-06AKoJa6v8CLO66pwypIf8M64LUyQT9PKEKTY8";
+// const secret = "J7L8bAABYfGN6SJr9RZePoWi9-06AKoJa6v8CLO66pwypIf8M64LUyQT9PKEKTY8";
+const jwksUrl = 'https://dev--nf202gv.us.auth0.com/.well-known/jwks.json';
 
 export const handler = async (
   event: CustomAuthorizerEvent
@@ -51,7 +53,12 @@ export const handler = async (
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
   const token = getToken(authHeader)
-  return verify(token, secret) as JwtPayload;
+
+  const response = await Axios.get(jwksUrl)
+  const responseData = response['data']['keys'][0]['x5c'][0]
+  const certificate = `-----BEGIN CERTIFICATE-----\n${responseData}\n-----END CERTIFICATE-----`
+
+  return verify(token,certificate,{algorithms:['RS256']}) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
