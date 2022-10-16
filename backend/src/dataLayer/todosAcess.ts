@@ -2,7 +2,6 @@ import * as AWS from 'aws-sdk'
 import { createLogger } from '../utils/logger'
 import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate'
-import * as uuid from 'uuid'
 import { CreateTodoRequest } from '../../../client/src/types/CreateTodoRequest';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 const AWSXRay = require('aws-xray-sdk');
@@ -51,17 +50,8 @@ export class TodoAccess {
     return result.Items[0] as TodoItem
   }
 
-  async createNewTodo(todo: CreateTodoRequest, user_id: string) : Promise<TodoItem> {
+  async createNewTodo(newItem: TodoItem) : Promise<TodoItem> {
     try {
-      const newItem = {
-        name: todo.name,
-        dueDate: todo.dueDate,
-        createdAt: new Date().toISOString(),
-        done: false,
-        userId: user_id,
-        todoId: await  uuid.v4()
-      }
-
       await this.docClient
         .put({
           TableName: this.todosTable,

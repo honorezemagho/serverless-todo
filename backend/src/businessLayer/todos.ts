@@ -5,6 +5,8 @@ import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import * as createError from 'http-errors'
+import * as uuid from 'uuid'
+
 
 // TODO: Implement businessLogic
 
@@ -21,9 +23,15 @@ export  const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
 export const createTodo =  async (todo: CreateTodoRequest, user_id: string): Promise<TodoItem>  => {
     logger.info('creating new todo');
 
-    return todoAccess.createNewTodo({
+    const newItem = {
         name: todo.name,
-        dueDate: todo.dueDate}, user_id)
+        dueDate: todo.dueDate,
+        createdAt: new Date().toISOString(),
+        done: false,
+        userId: user_id,
+        todoId: await  uuid.v4()
+      }
+    return todoAccess.createNewTodo(newItem)
 }
 
 export const updateTodo = async (todo_id: string, user_id: string, items_to_update: UpdateTodoRequest ) => {
