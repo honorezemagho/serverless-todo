@@ -5,12 +5,13 @@ import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
 import { getUserId } from '../utils';
-import { getTodosForUser } from '../../helpers/todos';
+import { getTodosForUser } from '../../businessLayer/todos';
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     // Write your code here
+    console.log(event);
 
     // get user id
     const userId = await getUserId(event)

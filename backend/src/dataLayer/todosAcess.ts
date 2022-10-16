@@ -1,10 +1,11 @@
 import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
 import { createLogger } from '../utils/logger'
 import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate'
 import * as uuid from 'uuid'
 import { CreateTodoRequest } from '../../../client/src/types/CreateTodoRequest';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb'
+const AWSXRay = require('aws-xray-sdk');
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -12,15 +13,19 @@ const logger = createLogger('TodosAccess')
 
 // TODO: Implement the dataLayer logic
 
-const dynamoDBDocClient = new XAWS.DynamoDB.DocumentClient()
-const table = process.env.TODOS_TABLE ?? 'Todos-dev'
 const todoIdIndex = process.env.TODOS_ID_INDEX ?? 'todoId'
 
+
 export class TodoAccess {
+
+  constructor(
+    private docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
+    private todosTable: string = process.env.TODOS_TABLE ?? 'Todos-dev',
+  ){}
   async getUserTodos(userId: string): Promise<TodoItem[]> {
-    const todos = await dynamoDBDocClient
+    const todos = await this.docClient
       .query({
-        TableName: table,
+        TableName: this.todosTable,
         IndexName: 'todoId',
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
@@ -33,9 +38,9 @@ export class TodoAccess {
   }
 
   async getToDoItem(todoId: string): Promise<TodoItem> {
-    const result = await dynamoDBDocClient
+    const result = await this.docClient
       .query({
-        TableName: table,
+        TableName: this.todosTable,
         IndexName: todoIdIndex,
         KeyConditionExpression: 'todoId = :todoId',
         ExpressionAttributeValues: {
@@ -57,9 +62,9 @@ export class TodoAccess {
         todoId: await  uuid.v4()
       }
 
-      await dynamoDBDocClient
+      await this.docClient
         .put({
-          TableName: table,
+          TableName: this.todosTable,
           Item: newItem
         })
         .promise()
@@ -73,7 +78,7 @@ export class TodoAccess {
 
   async updateTodo(todoId: string, userId: string, toUpdate: TodoUpdate) {
     const params = {
-      TableName: table,
+      TableName: this.todosTable,
       Key: {
         todoId: todoId,
         userId: userId
@@ -92,7 +97,7 @@ export class TodoAccess {
     }
 
     try {
-      await dynamoDBDocClient.update(params).promise()
+      await this.docClient.update(params).promise()
     } catch (error) {
       logger.log(error)
       return error
@@ -101,7 +106,7 @@ export class TodoAccess {
 
   async updateTodoAttachmentUrl(todoId: string, userId: string, attachmentUrl: string) {
     const params = {
-      TableName: table,
+      TableName: this.todosTable,
       Key: {
         todoId: todoId,
         userId: userId
@@ -116,7 +121,7 @@ export class TodoAccess {
     }
 
     try {
-      await dynamoDBDocClient.update(params).promise()
+      await this.docClient.update(params).promise()
     } catch (error) {
       logger.log(error)
       return error
@@ -125,7 +130,7 @@ export class TodoAccess {
 
   async deleteTodo(todoId: string, userId: string) {
     const params = {
-      TableName: table,
+      TableName: this.todosTable,
       Key: {
         todoId: todoId,
         userId: userId
@@ -133,7 +138,7 @@ export class TodoAccess {
     }
 
     try {
-      await dynamoDBDocClient.delete(params)
+      await this.docClient.delete(params)
       return true
     } catch (error) {
       logger.log(error)
