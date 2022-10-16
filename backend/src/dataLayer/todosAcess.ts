@@ -9,22 +9,20 @@ const XAWS = AWSXRay.captureAWS(AWS)
 
 const logger = createLogger('TodosAccess')
 
-// TODO: Implement the dataLayer logic
-
-const todoIdIndex = process.env.TODOS_ID_INDEX ?? 'todoId'
-
+// TODO: Implement the dataLayer logic 
 
 export class TodoAccess {
 
   constructor(
     private docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
     private todosTable: string = process.env.TODOS_TABLE ?? 'Todos-dev',
+    private todoIdIndex = process.env.TODOS_CREATED_AT_INDEX ?? 'CreatedAtIndex'
   ){}
   async getUserTodos(userId: string): Promise<TodoItem[]> {
     const todos = await this.docClient
       .query({
         TableName: this.todosTable,
-        IndexName: 'todoId',
+        IndexName: this.todoIdIndex,
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
           ':userId': userId
@@ -39,7 +37,7 @@ export class TodoAccess {
     const result = await this.docClient
       .query({
         TableName: this.todosTable,
-        IndexName: todoIdIndex,
+        IndexName: this.todoIdIndex,
         KeyConditionExpression: 'todoId = :todoId',
         ExpressionAttributeValues: {
           ':todoId': todoId
